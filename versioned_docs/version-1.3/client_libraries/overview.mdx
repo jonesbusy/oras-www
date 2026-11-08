@@ -168,7 +168,8 @@ Optional features enhance usability and integration with existing Docker credent
 
 ### Feature Checklist
 
-The following matrix tracks implementation status across language SDKs.  
+The following matrix tracks implementation status across language SDKs. Statuses were checked on 2026-11-08 against [ORAS Go v3.0.0](https://github.com/oras-project/oras-go/tree/v3.0.0) (tag commit dated 2026-11-01) and [ORAS Java main](https://github.com/oras-project/oras-java/tree/015079bd71e12ef40a473bf3f93560ecea3a7235) (`0.9.1-SNAPSHOT`, preview).
+
 Update these tables whenever a feature is implemented or documented; leave ❔ where a language hasn’t been evaluated yet.
 
 | Symbol | Meaning |
@@ -193,11 +194,20 @@ Update these tables whenever a feature is implemented or documented; leave ❔ w
 | ------------------------------ | :---: | :----: | :---: | :---: | :---: |
 | Standard Copy                  |   ✅   |   ❔    |   ❔   |   ✅   |   ✅   |
 | Extended Copy (with Referrers) |   ✅   |   ❔    |   ❔   |   ❌   |   🟡   |
-| Extended Registry APIs         |   ✅   |   ❔    |   ❔   |   ✅   |   ✅   |
+| Extended Registry APIs         |   ✅   |   ❔    |   ❔   |   ✅   |   🟡   |
 | OCI Image Layout Support       |   ✅   |   ❔    |   ❔   |   ❌   |   ✅   |
 
 #### Optional
 
 | Feature                       |  Go   | Python | Rust  |  C#   | Java  |
 | ----------------------------- | :---: | :----: | :---: | :---: | :---: |
-| Docker Credential Integration |   ✅   |   ❔    |   ❔   |   ❌   |   🟡   |
+| Docker Credential Integration |   ✅   |   ❔    |   ❔   |   ❌   |   ✅   |
+| Built-in Sigstore Keyed Verification | ❌ | ❔ | ❔ | ❔ | 🟡 |
+| Built-in Sigstore Keyless Verification | ❌ | ❔ | ❔ | ❔ | ❌ |
+
+**Status notes:**
+
+- Java’s Distribution Spec support remains partial: [its registry client](https://github.com/oras-project/oras-java/blob/015079bd71e12ef40a473bf3f93560ecea3a7235/src/main/java/land/oras/Registry.java) does not implement the referrers-tag update fallback when a subject-bearing manifest push receives no `OCI-Subject` response header. Its referrers pagination also reuses the first page’s cursor, limiting extended copies.
+- Java’s deep copy recursively copies referrers, but the referrer pagination limitation prevents reliable discovery of large referrer graphs. Its Docker catalog endpoint does not paginate, so Extended Registry APIs remains partial.
+- Go’s [policy API](https://github.com/oras-project/oras-go/blob/16d21e339dac9723c4f7684b1b1b7f64321a2132/registry/remote/policy/evaluator.go) exposes a custom `SigstoreVerifier` extension point and Fulcio/Rekor policy fields, but the SDK provides no built-in verifier. Java’s [Sigstore verifier](https://github.com/oras-project/oras-java/blob/015079bd71e12ef40a473bf3f93560ecea3a7235/src/main/java/land/oras/policy/SigstoreVerifier.java) supports keyed EC signatures only; it does not support keyless Fulcio/Rekor verification or Rekor inclusion proofs.
+- The Java Docker credential status covers the Docker config `auths`, `credHelpers`, and `credsStore` paths listed in the Optional feature description; it does not claim full Docker CLI compatibility.
